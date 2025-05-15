@@ -1,4 +1,4 @@
-const SELECT_MONTHLY_CLASSIFIERS = `
+export const SQL_MONTHLY_CLASSIFIERS = `
   select
     id,
     titulo_evento_gerador,
@@ -21,8 +21,6 @@ const SELECT_MONTHLY_CLASSIFIERS = `
     valor,
     quantidade
   from movimentacao.t_classificador_mensal
-  where ano = '2025' and mes = '04'
+  where ano = '{year}' and mes = '{month}'
   order by id_classificador
 `
-
-module.exports.monthlyClassifiersSQL = SELECT_MONTHLY_CLASSIFIERS;
