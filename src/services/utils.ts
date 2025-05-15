@@ -19,4 +19,17 @@ export class Utils {
 
     return properties;
   }
+
+  static getEnvironmentsStatus(environments: EnvironmentConfig[]): Record<string, string>[] {
+    const environmentStatus = []
+
+    for (const environment of environments) {
+      environmentStatus.push({
+        name: environment.name,
+        status: 'SUCESSO'
+      })
+    }
+
+    return environmentStatus;
+  }
 }

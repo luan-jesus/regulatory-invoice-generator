@@ -12,7 +12,7 @@ async function main() {
   try {
     const invoiceWorkbook = new InvoiceWorkbook(environments, { year: YEAR, month: MONTH });
     invoiceWorkbook.buildStatusSheet();
-    invoiceWorkbook.buildAllEnvironmentSheets();
+    await invoiceWorkbook.buildAllEnvironmentSheets();
     invoiceWorkbook.write(filePath);
   } catch (ex) {
     console.error(ex)

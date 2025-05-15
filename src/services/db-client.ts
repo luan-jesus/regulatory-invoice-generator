@@ -1,7 +1,7 @@
 import { Client } from "pg";
 import type { ConnectionProperties, QueryResult } from "../types";
 
-export class DbClientService {
+export class DbClient {
   private client: Client;
 
   constructor({ url, port, database, user, password }: ConnectionProperties) {
