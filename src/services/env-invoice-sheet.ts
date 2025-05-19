@@ -1,6 +1,9 @@
+import { Workbook } from "excel4node";
+import { MetadataService } from "./metadata-service";
 import { Sheet } from "./sheet";
 
 export class EnvInvoiceSheet extends Sheet {
+  private rowNumber: number = 2;
 
   createHeader(): void {
     this.sheet.cell(1, 1).string('Sequencial');
@@ -26,35 +29,118 @@ export class EnvInvoiceSheet extends Sheet {
   }
 
   createRows(rows: Record<string, string>[]): void {
-    let rowIndex = 2;
-
     for (const row of rows) {
-      this.sheet.cell(rowIndex, 1).number(parseInt(row['id']));
-      this.sheet.cell(rowIndex, 2).string(row['titulo_evento_gerador']);
-      this.sheet.cell(rowIndex, 3).string(row['titulo_classificador']);
-      this.sheet.cell(rowIndex, 4).string(row['codigo_operacao_classificador']);
-      this.sheet.cell(rowIndex, 5).string(row['titulo_conta_debito']);
-      this.sheet.cell(rowIndex, 6).string(row['numero_formatado_conta_debito']);
-      this.sheet.cell(rowIndex, 7).string(row['tipo_conta_debito']);
-      this.sheet.cell(rowIndex, 8).string(row['titulo_grupo_conta_debito']);
-      this.sheet.cell(rowIndex, 9).string(row['titulo_modalidade_grupo_conta_debito']);
-      this.sheet.cell(rowIndex, 10).string(row['tipo_modalidade_grupo_conta_debito']);
-      this.sheet.cell(rowIndex, 11).string(row['titulo_conta_credito']);
-      this.sheet.cell(rowIndex, 12).string(row['numero_formatado_conta_credito']);
-      this.sheet.cell(rowIndex, 13).string(row['tipo_conta_credito']);
-      this.sheet.cell(rowIndex, 14).string(row['titulo_grupo_conta_credito']);
-      this.sheet.cell(rowIndex, 15).string(row['titulo_modalidade_grupo_conta_credito']);
-      this.sheet.cell(rowIndex, 16).string(row['tipo_modalidade_grupo_conta_credito']);
-      this.sheet.cell(rowIndex, 17).string(row['mes']);
-      this.sheet.cell(rowIndex, 18).string(row['ano']);
-      this.sheet.cell(rowIndex, 19).number(parseFloat(row['valor']));
-      this.sheet.cell(rowIndex, 20).number(parseInt(row['quantidade']));
+      this.sheet.cell(this.rowNumber, 1).number(parseInt(row['id']));
+      this.sheet.cell(this.rowNumber, 2).string(row['titulo_evento_gerador']);
+      this.sheet.cell(this.rowNumber, 3).string(row['titulo_classificador']);
+      this.sheet.cell(this.rowNumber, 4).string(row['codigo_operacao_classificador']);
+      this.sheet.cell(this.rowNumber, 5).string(row['titulo_conta_debito']);
+      this.sheet.cell(this.rowNumber, 6).string(row['numero_formatado_conta_debito']);
+      this.sheet.cell(this.rowNumber, 7).string(row['tipo_conta_debito']);
+      this.sheet.cell(this.rowNumber, 8).string(row['titulo_grupo_conta_debito']);
+      this.sheet.cell(this.rowNumber, 9).string(row['titulo_modalidade_grupo_conta_debito']);
+      this.sheet.cell(this.rowNumber, 10).string(row['tipo_modalidade_grupo_conta_debito']);
+      this.sheet.cell(this.rowNumber, 11).string(row['titulo_conta_credito']);
+      this.sheet.cell(this.rowNumber, 12).string(row['numero_formatado_conta_credito']);
+      this.sheet.cell(this.rowNumber, 13).string(row['tipo_conta_credito']);
+      this.sheet.cell(this.rowNumber, 14).string(row['titulo_grupo_conta_credito']);
+      this.sheet.cell(this.rowNumber, 15).string(row['titulo_modalidade_grupo_conta_credito']);
+      this.sheet.cell(this.rowNumber, 16).string(row['tipo_modalidade_grupo_conta_credito']);
+      this.sheet.cell(this.rowNumber, 17).string(row['mes']);
+      this.sheet.cell(this.rowNumber, 18).string(row['ano']);
+      this.sheet.cell(this.rowNumber, 19).number(parseFloat(row['valor']));
+      this.sheet.cell(this.rowNumber, 20).number(parseInt(row['quantidade']));
 
-      rowIndex++;
+      this.rowNumber++;
     }
 
-    this.sheet.cell(rowIndex + 1, 19).style({font: {bold: true}}).string('Total')
-    this.sheet.cell(rowIndex + 1, 20).style({font: {bold: true}}).formula(`SUM(T2:T${rowIndex - 1})`)
+    this.rowNumber++;
+
+    this.sheet.cell(this.rowNumber, 19).style({font: {bold: true}}).string('Total')
+    this.sheet.cell(this.rowNumber, 20).style({font: {bold: true}}).formula(`SUM(T2:T${this.rowNumber - 1})`)
+  }
+
+  buildRangeTable(ranges: Record<string, string>[]): void {
+    this.rowNumber += 2;
+
+    // header
+    const headerStyle = this.workbook.createStyle({
+      font: {
+        bold: true,
+        color: '#ffffff'
+      },
+      fill: {
+        type: 'pattern',
+        patternType: 'solid',
+        fgColor: '#000000'
+      },
+      alignment: {
+        horizontal: 'center'
+      }
+    })
+
+    this.sheet.cell(this.rowNumber, 14).style(headerStyle).string('Faixa');
+    this.sheet.cell(this.rowNumber, 15).style(headerStyle).string('Inicio Faixa');
+    this.sheet.cell(this.rowNumber, 16).style(headerStyle).string('Final Faixa');
+    this.sheet.cell(this.rowNumber, 17).style(headerStyle).string('Tipo de Cobrança');
+    this.sheet.cell(this.rowNumber, 18).style(headerStyle).string('Valor Unitário');
+    this.sheet.cell(this.rowNumber, 19).style(headerStyle).string('Valor Faixa');
+
+    const rowStyle = this.workbook.createStyle({
+      border: {
+        left: {
+          style: 'thin',
+          color: '#000000'
+        },
+        right: {
+          style: 'thin',
+          color: '#000000'
+        },
+        top: {
+          style: 'thin',
+          color: '#000000'
+        },
+        bottom: {
+          style: 'thin',
+          color: '#000000'
+        }
+      }
+    })
+
+    // rows
+    for (const range of ranges) {
+      this.rowNumber++;
+
+      if (this.rowNumber % 2 === 0) {
+        rowStyle.fill = {
+          type: 'pattern',
+          patternType: 'solid',
+          fgColor: '#d9d9d9'
+        }
+      } else {
+        rowStyle.fill = {
+          type: 'pattern',
+          patternType: 'solid',
+          fgColor: '#ffffff'
+        }
+      }
+
+      this.sheet.cell(this.rowNumber, 14).style({...rowStyle, alignment: { horizontal: 'center'}}).number(parseInt(range['sequence']));
+      this.sheet.cell(this.rowNumber, 15).style({...rowStyle, alignment: { horizontal: 'right'}}).number(parseInt(range['range_start']));
+      this.sheet.cell(this.rowNumber, 16).style({...rowStyle, alignment: { horizontal: 'right'}}).number(parseInt(range['range_end'] ?? 0));
+      this.sheet.cell(this.rowNumber, 17).style({...rowStyle, alignment: { horizontal: 'left'}}).string(this.getBillingType(range['billing_type']));
+      this.sheet.cell(this.rowNumber, 18).style({...rowStyle, alignment: { horizontal: 'right'}}).number(parseInt(range['unit_value']));
+      this.sheet.cell(this.rowNumber, 19).style({...rowStyle, alignment: { horizontal: 'center'}}).string('-');
+    }
+  }
+
+  private getBillingType(billingType: string): string {
+    const billingLabels: Record<string, string> = {
+      'FIXED': 'Fixo',
+      'PER_TRANSACTION': 'Adicional por Transação'
+    }
+
+    return billingLabels[billingType];
   }
 
 }

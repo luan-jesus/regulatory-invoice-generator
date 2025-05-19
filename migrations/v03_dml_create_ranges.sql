@@ -1,0 +1,10 @@
+INSERT INTO t_range (id_environment, "sequence", range_start, range_end, billing_type, unit_value) VALUES(1, 1, 1, 500000, 'FIXED', 6290.00000000);
+INSERT INTO t_range (id_environment, "sequence", range_start, range_end, billing_type, unit_value) VALUES(1, 2, 500001, 1000000, 'PER_TRANSACTION', 0.00210);
+INSERT INTO t_range (id_environment, "sequence", range_start, range_end, billing_type, unit_value) VALUES(1, 3, 1000001, 2000000, 'PER_TRANSACTION', 0.00205);
+INSERT INTO t_range (id_environment, "sequence", range_start, range_end, billing_type, unit_value) VALUES(1, 4, 2000001, 4000000, 'PER_TRANSACTION', 0.00200);
+INSERT INTO t_range (id_environment, "sequence", range_start, range_end, billing_type, unit_value) VALUES(1, 5, 4000001, 8000000, 'PER_TRANSACTION', 0.00195);
+INSERT INTO t_range (id_environment, "sequence", range_start, range_end, billing_type, unit_value) VALUES(1, 6, 8000001, 16000000, 'PER_TRANSACTION', 0.00190);
+INSERT INTO t_range (id_environment, "sequence", range_start, range_end, billing_type, unit_value) VALUES(1, 7, 16000001, 32000000, 'PER_TRANSACTION', 0.00185);
+INSERT INTO t_range (id_environment, "sequence", range_start, range_end, billing_type, unit_value) VALUES(1, 8, 32000001, 64000000, 'PER_TRANSACTION', 0.00180);
+INSERT INTO t_range (id_environment, "sequence", range_start, range_end, billing_type, unit_value) VALUES(1, 9, 64000001, 128000000, 'PER_TRANSACTION', 0.00175);
+INSERT INTO t_range (id_environment, "sequence", range_start, range_end, billing_type, unit_value) VALUES(1, 10, 128000001, NULL, 'PER_TRANSACTION', 0.00170);

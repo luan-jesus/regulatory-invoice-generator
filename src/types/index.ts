@@ -6,9 +6,11 @@ export type DatabaseConfig = {
 };
 
 export type EnvironmentConfig = {
-  id: string;
+  id: number;
   name: string;
+  description: string;
   databases: DatabaseConfig[];
+  active: boolean;
 };
 
 export type ReferenceDate = {
@@ -22,6 +24,7 @@ export type ConnectionProperties = {
   database: string;
   user: string;
   password: string;
+  ssl?: boolean;
 }
 
 export type QueryResult = {

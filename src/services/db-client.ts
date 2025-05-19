@@ -3,15 +3,16 @@ import type { ConnectionProperties, QueryResult } from "../types";
 
 export class DbClient {
   private client: Client;
+  public isOpen: boolean = false;
 
-  constructor({ url, port, database, user, password }: ConnectionProperties) {
+  constructor({ url, port, database, user, password, ssl }: ConnectionProperties) {
     this.client = new Client({
       host: url,
       port: parseInt(port),
       user: user,
       password: password,
       database: database,
-      ssl: {
+      ssl: ssl ?? {
         rejectUnauthorized: false
       }
     });
@@ -19,10 +20,12 @@ export class DbClient {
 
   async open() {
     await this.client.connect();
+    this.isOpen = true;
   }
 
   async close() {
     await this.client.end();
+    this.isOpen = false;
   }
 
   async query(query: string): Promise<QueryResult> {
