@@ -1,11 +1,14 @@
-import { Workbook } from "excel4node";
-import { MetadataService } from "./metadata-service";
 import { Sheet } from "./sheet";
 
 export class EnvInvoiceSheet extends Sheet {
   private rowNumber: number = 2;
 
   createHeader(): void {
+    this.sheet.column(15).setWidth(15);
+    this.sheet.column(16).setWidth(15);
+    this.sheet.column(17).setWidth(22);
+    this.sheet.column(18).setWidth(15);
+    this.sheet.column(19).setWidth(15);
     this.sheet.cell(1, 1).string('Sequencial');
     this.sheet.cell(1, 2).string('Evento');
     this.sheet.cell(1, 3).string('Classificador');
@@ -64,7 +67,36 @@ export class EnvInvoiceSheet extends Sheet {
     this.rowNumber += 2;
 
     // header
-    const headerStyle = this.workbook.createStyle({
+    const headerStyle = this.getHeaderStyle();
+
+    this.sheet.cell(this.rowNumber, 14).style(headerStyle).string('Faixa');
+    this.sheet.cell(this.rowNumber, 15).style(headerStyle).string('Inicio Faixa');
+    this.sheet.cell(this.rowNumber, 16).style(headerStyle).string('Final Faixa');
+    this.sheet.cell(this.rowNumber, 17).style(headerStyle).string('Tipo de Cobrança');
+    this.sheet.cell(this.rowNumber, 18).style(headerStyle).string('Valor Unitário');
+    this.sheet.cell(this.rowNumber, 19).style(headerStyle).string('Valor Faixa');
+
+    
+    // rows
+    for (const range of ranges) {
+      this.rowNumber++;
+      
+      this.sheet.cell(this.rowNumber, 14).style(this.getRowStyle()).number(parseInt(range['sequence']));
+      this.sheet.cell(this.rowNumber, 15).style(this.getRangeStyle()).number(parseFloat(range['range_start']));
+      this.sheet.cell(this.rowNumber, 16).style(this.getRangeStyle()).number(parseFloat(range['range_end'] ?? 0));
+      this.sheet.cell(this.rowNumber, 17).style(this.getRowStyle('left')).string(this.getBillingType(range['billing_type']));
+
+      if (range['billing_type'] === 'FIXED')
+        this.sheet.cell(this.rowNumber, 18).style(this.getFixedStyle()).number(parseFloat(range['unit_value']));
+      else
+        this.sheet.cell(this.rowNumber, 18).style(this.getDecimalStyle()).number(parseFloat(range['unit_value']));
+
+      this.sheet.cell(this.rowNumber, 19).style(this.getFixedStyle()).number(0);
+    }
+  }
+
+  private getHeaderStyle() {
+    return this.workbook.createStyle({
       font: {
         bold: true,
         color: '#ffffff'
@@ -76,17 +108,22 @@ export class EnvInvoiceSheet extends Sheet {
       },
       alignment: {
         horizontal: 'center'
-      }
+      },
+      numberFormat: '$#,##0.00; ($#,##0.00); -'
     })
+  }
 
-    this.sheet.cell(this.rowNumber, 14).style(headerStyle).string('Faixa');
-    this.sheet.cell(this.rowNumber, 15).style(headerStyle).string('Inicio Faixa');
-    this.sheet.cell(this.rowNumber, 16).style(headerStyle).string('Final Faixa');
-    this.sheet.cell(this.rowNumber, 17).style(headerStyle).string('Tipo de Cobrança');
-    this.sheet.cell(this.rowNumber, 18).style(headerStyle).string('Valor Unitário');
-    this.sheet.cell(this.rowNumber, 19).style(headerStyle).string('Valor Faixa');
-
-    const rowStyle = this.workbook.createStyle({
+  private getRangeStyle() {
+    return this.workbook.createStyle({
+      numberFormat: '#,##0; (#,##0); -',
+      alignment: {
+        horizontal: 'right'
+      },
+      fill: {
+        type: 'pattern',
+        patternType: 'solid',
+        fgColor: this.rowNumber % 2 === 0 ? '#d9d9d9' : '#ffffff'
+      },
       border: {
         left: {
           style: 'thin',
@@ -106,32 +143,101 @@ export class EnvInvoiceSheet extends Sheet {
         }
       }
     })
+  }
 
-    // rows
-    for (const range of ranges) {
-      this.rowNumber++;
-
-      if (this.rowNumber % 2 === 0) {
-        rowStyle.fill = {
-          type: 'pattern',
-          patternType: 'solid',
-          fgColor: '#d9d9d9'
-        }
-      } else {
-        rowStyle.fill = {
-          type: 'pattern',
-          patternType: 'solid',
-          fgColor: '#ffffff'
+  private getFixedStyle() {
+    return this.workbook.createStyle({
+      numberFormat: 'R$ #,##0.00; (R$ #,##0.00); -',
+      alignment: {
+        horizontal: 'right'
+      },
+      fill: {
+        type: 'pattern',
+        patternType: 'solid',
+        fgColor: this.rowNumber % 2 === 0 ? '#d9d9d9' : '#ffffff'
+      },
+      border: {
+        left: {
+          style: 'thin',
+          color: '#000000'
+        },
+        right: {
+          style: 'thin',
+          color: '#000000'
+        },
+        top: {
+          style: 'thin',
+          color: '#000000'
+        },
+        bottom: {
+          style: 'thin',
+          color: '#000000'
         }
       }
+    })
+  }
 
-      this.sheet.cell(this.rowNumber, 14).style({...rowStyle, alignment: { horizontal: 'center'}}).number(parseInt(range['sequence']));
-      this.sheet.cell(this.rowNumber, 15).style({...rowStyle, alignment: { horizontal: 'right'}}).number(parseInt(range['range_start']));
-      this.sheet.cell(this.rowNumber, 16).style({...rowStyle, alignment: { horizontal: 'right'}}).number(parseInt(range['range_end'] ?? 0));
-      this.sheet.cell(this.rowNumber, 17).style({...rowStyle, alignment: { horizontal: 'left'}}).string(this.getBillingType(range['billing_type']));
-      this.sheet.cell(this.rowNumber, 18).style({...rowStyle, alignment: { horizontal: 'right'}}).number(parseInt(range['unit_value']));
-      this.sheet.cell(this.rowNumber, 19).style({...rowStyle, alignment: { horizontal: 'center'}}).string('-');
-    }
+  private getDecimalStyle() {
+    return this.workbook.createStyle({
+      numberFormat: 'R$ #,##0.00000; (R$ #,##0.00000); -',
+      alignment: {
+        horizontal: 'right'
+      },
+      fill: {
+        type: 'pattern',
+        patternType: 'solid',
+        fgColor: this.rowNumber % 2 === 0 ? '#d9d9d9' : '#ffffff'
+      },
+      border: {
+        left: {
+          style: 'thin',
+          color: '#000000'
+        },
+        right: {
+          style: 'thin',
+          color: '#000000'
+        },
+        top: {
+          style: 'thin',
+          color: '#000000'
+        },
+        bottom: {
+          style: 'thin',
+          color: '#000000'
+        }
+      }
+    })
+  }
+
+  private getRowStyle(alignment?: 'left') {
+    return this.workbook.createStyle({
+      alignment: {
+        horizontal: alignment ?? 'center',
+      },
+      fill: {
+        type: 'pattern',
+        patternType: 'solid',
+        fgColor: this.rowNumber % 2 === 0 ? '#d9d9d9' : '#ffffff'
+      },
+      border: {
+        left: {
+          style: 'thin',
+          color: '#000000'
+        },
+        right: {
+          style: 'thin',
+          color: '#000000'
+        },
+        top: {
+          style: 'thin',
+          color: '#000000'
+        },
+        bottom: {
+          style: 'thin',
+          color: '#000000'
+        }
+      }
+    })
   }
 
   private getBillingType(billingType: string): string {
