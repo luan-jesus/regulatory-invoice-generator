@@ -2,6 +2,8 @@ import { Sheet } from "./sheet";
 
 export class EnvInvoiceSheet extends Sheet {
   private rowNumber: number = 2;
+  private rowCount: number = 0;
+  private rangeValues: Map<number, number> = new Map();
 
   createHeader(): void {
     this.sheet.column(15).setWidth(15);
@@ -54,6 +56,8 @@ export class EnvInvoiceSheet extends Sheet {
       this.sheet.cell(this.rowNumber, 19).number(parseFloat(row['valor']));
       this.sheet.cell(this.rowNumber, 20).number(parseInt(row['quantidade']));
 
+      this.rowCount += parseInt(row['quantidade']);
+
       this.rowNumber++;
     }
 
@@ -65,6 +69,7 @@ export class EnvInvoiceSheet extends Sheet {
 
   buildRangeTable(ranges: Record<string, string>[]): void {
     this.rowNumber += 2;
+    this.setUpRangesValue(ranges);
 
     // header
     const headerStyle = this.getHeaderStyle();
@@ -91,7 +96,32 @@ export class EnvInvoiceSheet extends Sheet {
       else
         this.sheet.cell(this.rowNumber, 18).style(this.getDecimalStyle()).number(parseFloat(range['unit_value']));
 
-      this.sheet.cell(this.rowNumber, 19).style(this.getFixedStyle()).number(0);
+      this.sheet.cell(this.rowNumber, 19).style(this.getFixedStyle()).number(this.rangeValues.get(parseInt(range['sequence'])) ?? 0);
+    }
+  }
+
+  private setUpRangesValue(ranges: Record<string, string>[]): void {
+    let recordsCount = this.rowCount;
+
+    for (const range of ranges) {
+      if (range['billing_type'] === 'FIXED') {
+        this.rangeValues.set(parseInt(range['sequence']), parseFloat(range['unit_value']));
+        recordsCount -= parseInt(range['range_end']);
+        continue;
+      }
+
+      const rangeStart = parseInt(range['range_start']);
+      const rangeEnd = parseInt(range['range_end'] ?? 0);
+      const unitValue = parseFloat(range['unit_value']);
+
+      if ((recordsCount - (rangeEnd - rangeStart)) > 0) {
+        this.rangeValues.set(parseInt(range['sequence']), unitValue * (rangeEnd - rangeStart));
+        recordsCount -= (rangeEnd - rangeStart);
+        continue;
+      }
+
+      this.rangeValues.set(parseInt(range['sequence']), unitValue * recordsCount);
+      break;
     }
   }
 
