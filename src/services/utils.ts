@@ -26,6 +26,7 @@ export class Utils {
     for (const environment of environments) {
       environmentStatus.push({
         name: environment.name,
+        description: environment.description,
         status: 'SUCESSO'
       })
     }
