@@ -44,8 +44,10 @@ export class InvoiceWorkbook {
 
     const ranges = await this.metadataService.fetchEnvironmentRange(environment.id);
 
-    if (ranges && ranges.size)
+    if (ranges && ranges.size) {
       envInvoiceSheet.buildRangeTable(ranges.content);
+      envInvoiceSheet.buildRangeResume();
+    }
   }
 
   write(filePath: string) {

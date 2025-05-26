@@ -1,9 +1,15 @@
 import { Sheet } from "./sheet";
 
+type RangeResult = {
+  rangeQuantity: number;
+  unitValue: string;
+  rangeValue: number;
+}
+
 export class EnvInvoiceSheet extends Sheet {
   private rowNumber: number = 2;
   private rowCount: number = 0;
-  private rangeValues: Map<number, number> = new Map();
+  private rangeValues: Map<number, RangeResult> = new Map();
 
   createHeader(): void {
     this.sheet.column(15).setWidth(15);
@@ -96,8 +102,46 @@ export class EnvInvoiceSheet extends Sheet {
       else
         this.sheet.cell(this.rowNumber, 18).style(this.getDecimalStyle()).number(parseFloat(range['unit_value']));
 
-      this.sheet.cell(this.rowNumber, 19).style(this.getFixedStyle()).number(this.rangeValues.get(parseInt(range['sequence'])) ?? 0);
+      this.sheet.cell(this.rowNumber, 19).style(this.getFixedStyle()).number(this.rangeValues.get(parseInt(range['sequence']))?.rangeValue ?? 0);
     }
+  }
+
+  buildRangeResume(): void {
+    this.rowNumber += 2;
+
+    // header
+    const headerStyle = this.getResumeHeaderStyle();
+
+    this.sheet.cell(this.rowNumber, 16).style(headerStyle).string('FAIXA');
+    this.sheet.cell(this.rowNumber, 17).style(headerStyle).string('QUANTIDADE DA FAIXA');
+    this.sheet.cell(this.rowNumber, 18).style(headerStyle).string('VALOR UNITÁRIO');
+    this.sheet.cell(this.rowNumber, 19).style(headerStyle).string('VALOR FAIXA');
+
+    
+    this.rowNumber++;
+
+    // rows
+    for (const range of this.rangeValues.entries()) {
+      this.sheet.cell(this.rowNumber, 16).style(this.getRowStyle('center', true)).number(range[0]);
+      this.sheet.cell(this.rowNumber, 17).style(this.getRangeStyle(true)).number(range[1].rangeQuantity);
+
+      if (range[1].unitValue === 'fixo') 
+        this.sheet.cell(this.rowNumber, 18).style(this.getRowStyle('right', true)).string(range[1].unitValue);
+      else
+        this.sheet.cell(this.rowNumber, 18).style(this.getDecimalStyle(true)).number(parseFloat(range[1].unitValue));
+
+      this.sheet.cell(this.rowNumber, 19).style(this.getFixedStyle(true)).number(range[1].rangeValue);
+
+      this.rowNumber++;
+    }
+
+    // footer
+    this.sheet.cell(this.rowNumber, 16).style(headerStyle).string('Total');
+    
+    this.sheet.cell(this.rowNumber, 17).style(this.getResumeHeaderStyle('number')).formula(`SUM(Q${this.rowNumber - this.rangeValues.size}:Q${this.rowNumber - 1})`);
+    this.sheet.cell(this.rowNumber, 18).style(headerStyle).string('');
+    this.sheet.cell(this.rowNumber, 19).style(this.getResumeHeaderStyle('currency')).formula(`SUM(S${this.rowNumber - this.rangeValues.size}:S${this.rowNumber - 1})`);
+
   }
 
   private setUpRangesValue(ranges: Record<string, string>[]): void {
@@ -105,22 +149,38 @@ export class EnvInvoiceSheet extends Sheet {
 
     for (const range of ranges) {
       if (range['billing_type'] === 'FIXED') {
-        this.rangeValues.set(parseInt(range['sequence']), parseFloat(range['unit_value']));
+        this.rangeValues.set(parseInt(range['sequence']), {
+          rangeQuantity: recordsCount >= parseInt(range['range_end']) ? parseInt(range['range_end']) : recordsCount,
+          unitValue: 'fixo',
+          rangeValue: parseFloat(range['unit_value'])
+        });
         recordsCount -= parseInt(range['range_end']);
         continue;
       }
 
-      const rangeStart = parseInt(range['range_start']);
+      if (recordsCount <= 0) {
+        break;
+      }
+
+      const rangeStart = parseInt(range['range_start']) - 1;
       const rangeEnd = parseInt(range['range_end'] ?? 0);
       const unitValue = parseFloat(range['unit_value']);
 
       if ((recordsCount - (rangeEnd - rangeStart)) > 0) {
-        this.rangeValues.set(parseInt(range['sequence']), unitValue * (rangeEnd - rangeStart));
+        this.rangeValues.set(parseInt(range['sequence']), {
+          rangeQuantity: (rangeEnd - rangeStart),
+          unitValue: range['unit_value'],
+          rangeValue: unitValue * (rangeEnd - rangeStart)
+        });
         recordsCount -= (rangeEnd - rangeStart);
         continue;
       }
 
-      this.rangeValues.set(parseInt(range['sequence']), unitValue * recordsCount);
+      this.rangeValues.set(parseInt(range['sequence']), {
+        rangeQuantity: recordsCount,
+        unitValue: range['unit_value'],
+        rangeValue: unitValue * recordsCount
+      });
       break;
     }
   }
@@ -129,7 +189,8 @@ export class EnvInvoiceSheet extends Sheet {
     return this.workbook.createStyle({
       font: {
         bold: true,
-        color: '#ffffff'
+        color: '#ffffff',
+        size: 11
       },
       fill: {
         type: 'pattern',
@@ -138,13 +199,68 @@ export class EnvInvoiceSheet extends Sheet {
       },
       alignment: {
         horizontal: 'center'
-      },
-      numberFormat: '$#,##0.00; ($#,##0.00); -'
+      }
     })
   }
 
-  private getRangeStyle() {
+  private getResumeHeaderStyle(variant?: 'default' | 'number' | 'currency') {
+    let alignment: 'center' | 'right' = 'center';
+    let numberFormat = 'R$ #,##0.00; (R$ #,##0.00); -';
+
+    if (variant === 'number') {
+      numberFormat = '#,##0; (#,##0); -';
+      alignment = 'right';
+    } else if (variant === 'currency') {
+      numberFormat = 'R$ #,##0.00; (R$ #,##0.00); -';
+      alignment = 'right';
+    }
+
     return this.workbook.createStyle({
+      font: {
+        bold: true,
+        color: '#000000',
+        size: 11
+      },
+      fill: {
+        type: 'pattern',
+        patternType: 'solid',
+        fgColor: '#bfbfbf'
+      },
+      alignment: {
+        horizontal: alignment
+      },
+      border: {
+        left: {
+          style: 'thin',
+          color: '#000000'
+        },
+        right: {
+          style: 'thin',
+          color: '#000000'
+        },
+        top: {
+          style: 'thin',
+          color: '#000000'
+        },
+        bottom: {
+          style: 'thin',
+          color: '#000000'
+        }
+      },
+      numberFormat: numberFormat
+    })
+  }
+
+  private getRangeStyle(bgWhite?: boolean) {
+    let fgColor = this.rowNumber % 2 === 0 ? '#d9d9d9' : '#ffffff';
+
+    if (bgWhite)
+      fgColor = '#ffffff';
+
+    return this.workbook.createStyle({
+      font: {
+        size: 11,
+      },
       numberFormat: '#,##0; (#,##0); -',
       alignment: {
         horizontal: 'right'
@@ -152,7 +268,7 @@ export class EnvInvoiceSheet extends Sheet {
       fill: {
         type: 'pattern',
         patternType: 'solid',
-        fgColor: this.rowNumber % 2 === 0 ? '#d9d9d9' : '#ffffff'
+        fgColor: fgColor
       },
       border: {
         left: {
@@ -175,8 +291,16 @@ export class EnvInvoiceSheet extends Sheet {
     })
   }
 
-  private getFixedStyle() {
+  private getFixedStyle(bgWhite?: boolean) {
+    let fgColor = this.rowNumber % 2 === 0 ? '#d9d9d9' : '#ffffff';
+
+    if (bgWhite)
+      fgColor = '#ffffff';
+
     return this.workbook.createStyle({
+      font: {
+        size: 11,
+      },
       numberFormat: 'R$ #,##0.00; (R$ #,##0.00); -',
       alignment: {
         horizontal: 'right'
@@ -184,7 +308,7 @@ export class EnvInvoiceSheet extends Sheet {
       fill: {
         type: 'pattern',
         patternType: 'solid',
-        fgColor: this.rowNumber % 2 === 0 ? '#d9d9d9' : '#ffffff'
+        fgColor: fgColor
       },
       border: {
         left: {
@@ -207,8 +331,16 @@ export class EnvInvoiceSheet extends Sheet {
     })
   }
 
-  private getDecimalStyle() {
+  private getDecimalStyle(bgWhite?: boolean) {
+    let fgColor = this.rowNumber % 2 === 0 ? '#d9d9d9' : '#ffffff';
+
+    if (bgWhite)
+      fgColor = '#ffffff';
+
     return this.workbook.createStyle({
+      font: {
+        size: 11,
+      },
       numberFormat: 'R$ #,##0.00000; (R$ #,##0.00000); -',
       alignment: {
         horizontal: 'right'
@@ -216,7 +348,7 @@ export class EnvInvoiceSheet extends Sheet {
       fill: {
         type: 'pattern',
         patternType: 'solid',
-        fgColor: this.rowNumber % 2 === 0 ? '#d9d9d9' : '#ffffff'
+        fgColor: fgColor
       },
       border: {
         left: {
@@ -239,15 +371,23 @@ export class EnvInvoiceSheet extends Sheet {
     })
   }
 
-  private getRowStyle(alignment?: 'left') {
+  private getRowStyle(alignment?: 'left' | 'center' | 'right', bgWhite?: boolean) {
+    let fgColor = this.rowNumber % 2 === 0 ? '#d9d9d9' : '#ffffff';
+
+    if (bgWhite)
+      fgColor = '#ffffff';
+
     return this.workbook.createStyle({
+      font: {
+        size: 11,
+      },
       alignment: {
         horizontal: alignment ?? 'center',
       },
       fill: {
         type: 'pattern',
         patternType: 'solid',
-        fgColor: this.rowNumber % 2 === 0 ? '#d9d9d9' : '#ffffff'
+        fgColor: fgColor
       },
       border: {
         left: {
