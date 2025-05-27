@@ -19,7 +19,8 @@ export default class EnvironmentService {
     for (const movementService of this.environmentMovementService.values()) {
       console.log(`(${++i} / ${this.environmentMovementService.size}) - fetching status from: ${movementService.environment.name}`)
 
-      const responseOld = await movementService.findEnvironmentResume('03', referenceDate.year);
+      const previousDate = this.getPreviousDate(referenceDate);
+      const responseOld = await movementService.findEnvironmentResume(previousDate.month, previousDate.year);
       const responseActual = await movementService.findEnvironmentResume(referenceDate.month, referenceDate.year);
       
       const oldData = responseOld.content[0] as Record<string, any>;
@@ -42,6 +43,10 @@ export default class EnvironmentService {
   }
 
   getRangeValue(recordsCount: number, ranges: Record<string, string>[]): string {
+    return Array.from(this.getCalculatedRange(recordsCount, ranges).values()).reduce((acc, range) => acc + range.rangeValue, 0).toString()
+  }
+
+  getCalculatedRange(recordsCount: number, ranges: Record<string, string>[]): Map<number, RangeResult> {
     const rangeValues: Map<number, RangeResult> = new Map();
 
     for (const range of ranges) {
@@ -81,6 +86,15 @@ export default class EnvironmentService {
       break;
     }
 
-    return Array.from(rangeValues.values()).reduce((acc, range) => acc + range.rangeValue, 0).toString();
+    return rangeValues;
+  }
+
+  private getPreviousDate(referenceDate: ReferenceDate): ReferenceDate {
+    const actualMonth = parseInt(referenceDate.month);
+
+    return {
+      month: actualMonth === 1 ? '12' : (actualMonth - 1).toString().padStart(2, '0'),
+      year: actualMonth === 1 ? (parseInt(referenceDate.year) - 1).toString() : referenceDate.year.toString()
+    }
   }
 }

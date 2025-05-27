@@ -70,7 +70,6 @@ export default class EnvironmentMovementService {
 
   async open() {
     if (!this.dbClient.isOpen) {
-      console.log(`Opening connection to environment: ${this.environment.name}`);
       await this.dbClient.open();
     }
   }

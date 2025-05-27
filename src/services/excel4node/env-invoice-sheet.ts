@@ -1,3 +1,5 @@
+import { Workbook } from "excel4node";
+import EnvironmentService from "../environment/environment-service";
 import SheetStyleBuilder from "../utils/sheet-style-builder";
 import { Sheet } from "./sheet";
 
@@ -8,9 +10,16 @@ export type RangeResult = {
 }
 
 export class EnvInvoiceSheet extends Sheet {
+  private environmentService: EnvironmentService;
+
   private rowNumber: number = 2;
   private rowCount: number = 0;
   private rangeValues: Map<number, RangeResult> = new Map();
+
+  constructor(workbook: Workbook, sheetName: string, environmentService: EnvironmentService) {
+    super(workbook, sheetName);
+    this.environmentService = environmentService;
+  }
 
   createHeader(): void {
     this.sheet.column(15).setWidth(15);
@@ -76,7 +85,7 @@ export class EnvInvoiceSheet extends Sheet {
 
   buildRangeTable(ranges: Record<string, string>[]): void {
     this.rowNumber += 2;
-    this.setUpRangesValue(ranges);
+    this.rangeValues = this.environmentService.getCalculatedRange(this.rowCount, ranges);
 
     // header
     const headerStyle = this.getHeaderStyle();
@@ -143,47 +152,6 @@ export class EnvInvoiceSheet extends Sheet {
     this.sheet.cell(this.rowNumber, 18).style(headerStyle).string('');
     this.sheet.cell(this.rowNumber, 19).style(this.getResumeHeaderStyle('currency')).formula(`SUM(S${this.rowNumber - this.rangeValues.size}:S${this.rowNumber - 1})`);
 
-  }
-
-  private setUpRangesValue(ranges: Record<string, string>[]): void {
-    let recordsCount = this.rowCount;
-
-    for (const range of ranges) {
-      if (range['billing_type'] === 'FIXED') {
-        this.rangeValues.set(parseInt(range['sequence']), {
-          rangeQuantity: recordsCount >= parseInt(range['range_end']) ? parseInt(range['range_end']) : recordsCount,
-          unitValue: 'fixo',
-          rangeValue: parseFloat(range['unit_value'])
-        });
-        recordsCount -= parseInt(range['range_end']);
-        continue;
-      }
-
-      if (recordsCount <= 0) {
-        break;
-      }
-
-      const rangeStart = parseInt(range['range_start']) - 1;
-      const rangeEnd = parseInt(range['range_end'] ?? 0);
-      const unitValue = parseFloat(range['unit_value']);
-
-      if ((recordsCount - (rangeEnd - rangeStart)) > 0) {
-        this.rangeValues.set(parseInt(range['sequence']), {
-          rangeQuantity: (rangeEnd - rangeStart),
-          unitValue: range['unit_value'],
-          rangeValue: unitValue * (rangeEnd - rangeStart)
-        });
-        recordsCount -= (rangeEnd - rangeStart);
-        continue;
-      }
-
-      this.rangeValues.set(parseInt(range['sequence']), {
-        rangeQuantity: recordsCount,
-        unitValue: range['unit_value'],
-        rangeValue: unitValue * recordsCount
-      });
-      break;
-    }
   }
 
   private getHeaderStyle() {

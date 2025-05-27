@@ -54,6 +54,10 @@ class RegulatoryInvoiceGenerator {
   // close all services connections
   static async destroyAll() {
     await this.metadataService.close();
+
+    for (const movementService of this.environmentMovementService.values()) {
+      await movementService.close();
+    }
   }
 }
 

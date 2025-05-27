@@ -22,7 +22,7 @@ export class InvoiceWorkbook {
   }
 
   async buildStatusSheet() {
-    const statusSheet = new StatusSheet(this.workbook, 'Status');
+    const statusSheet = new StatusSheet(this.workbook, 'Status', this.referenceDate);
     statusSheet.createHeader();
     statusSheet.createRows(await this.environmentService.getEnvironmentsStatus(this.referenceDate));
   }
@@ -36,7 +36,7 @@ export class InvoiceWorkbook {
   }
 
   async buildEnvironmentSheet(environmentMovementService: EnvironmentMovementService) {
-    const envInvoiceSheet = new EnvInvoiceSheet(this.workbook, environmentMovementService.environment.description);
+    const envInvoiceSheet = new EnvInvoiceSheet(this.workbook, environmentMovementService.environment.description, this.environmentService);
     envInvoiceSheet.createHeader();
     
     const monthlyMovements = await environmentMovementService.findMonthlyMovements(this.referenceDate.month, this.referenceDate.year);

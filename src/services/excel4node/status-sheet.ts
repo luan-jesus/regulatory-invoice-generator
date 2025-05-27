@@ -1,8 +1,15 @@
+import { ReferenceDate } from "../../types";
 import SheetStyleBuilder from "../utils/sheet-style-builder";
 import { Sheet } from "./sheet";
 import { getExcelCellRef } from "excel4node";
 
 export class StatusSheet extends Sheet {
+  private referenceDate: ReferenceDate;
+
+  constructor(workbook: any, sheetName: string, referenceDate: ReferenceDate) {
+    super(workbook, sheetName);
+    this.referenceDate = referenceDate;
+  }
 
   createHeader(): void {
     this.sheet.column(1).setWidth(20)
@@ -16,11 +23,11 @@ export class StatusSheet extends Sheet {
     this.sheet.cell(1, 1, 2, 1, true).style(this.getHeaderStyle()).string('Ambiente')
     this.sheet.cell(1, 2, 2, 2, true).style(this.getHeaderStyle()).string('Status Rotinas')
 
-    this.sheet.cell(1, 3, 1, 4, true).style(this.getHeaderStyle()).string('Faturamento mar/2025')
+    this.sheet.cell(1, 3, 1, 4, true).style(this.getHeaderStyle()).string(`Faturamento ${(this.getPreviousDate()).month}/${this.getPreviousDate().year}`)
     this.sheet.cell(2, 3).style(this.getHeaderStyle()).string('Volume')
     this.sheet.cell(2, 4).style(this.getHeaderStyle()).string('Valor')
 
-    this.sheet.cell(1, 5, 1, 6, true).style(this.getHeaderStyle()).string('Faturamento abr/2025')
+    this.sheet.cell(1, 5, 1, 6, true).style(this.getHeaderStyle()).string(`Faturamento ${this.referenceDate.month}/${this.referenceDate.year}`)
     this.sheet.cell(2, 5).style(this.getHeaderStyle()).string('Volume')
     this.sheet.cell(2, 6).style(this.getHeaderStyle()).string('Valor')
 
@@ -48,10 +55,18 @@ export class StatusSheet extends Sheet {
         percentageStyle = 'negative';
       }
 
-
       this.sheet.cell(rowIndex, 7).style(this.getPercentageStyle(percentageStyle)).formula(`-((${getExcelCellRef(rowIndex, 4)}-${getExcelCellRef(rowIndex, 6)})/(${getExcelCellRef(rowIndex, 4)}+${getExcelCellRef(rowIndex, 6)}))`)
 
       rowIndex++;
+    }
+  }
+
+  private getPreviousDate(): ReferenceDate {
+    const actualMonth = parseInt(this.referenceDate.month);
+
+    return {
+      month: actualMonth === 1 ? '12' : (actualMonth - 1).toString().padStart(2, '0'),
+      year: actualMonth === 1 ? (parseInt(this.referenceDate.year) - 1).toString() : this.referenceDate.year.toString()
     }
   }
 
