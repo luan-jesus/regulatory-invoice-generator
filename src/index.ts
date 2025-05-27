@@ -22,7 +22,7 @@ async function main() {
       .filter((env: EnvironmentConfig) => env.active);
 
     const invoiceWorkbook = new InvoiceWorkbook(environments, { year: YEAR, month: MONTH }, metadataService);
-    invoiceWorkbook.buildStatusSheet();
+    await invoiceWorkbook.buildStatusSheet();
     await invoiceWorkbook.buildAllEnvironmentSheets();
     invoiceWorkbook.write(filePath);
   } catch (ex) {

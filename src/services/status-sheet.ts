@@ -13,18 +13,18 @@ export class StatusSheet extends Sheet {
     this.sheet.column(6).setWidth(20)
     this.sheet.column(7).setWidth(20)
 
-    this.sheet.cell(1, 1, 2, 1, true).style(this.getDefaultStyle()).string('Ambiente')
-    this.sheet.cell(1, 2, 2, 2, true).style(this.getDefaultStyle()).string('Status Rotinas')
+    this.sheet.cell(1, 1, 2, 1, true).style(this.getHeaderStyle()).string('Ambiente')
+    this.sheet.cell(1, 2, 2, 2, true).style(this.getHeaderStyle()).string('Status Rotinas')
 
-    this.sheet.cell(1, 3, 1, 4, true).style(this.getDefaultStyle()).string('Faturamento mar/2025')
-    this.sheet.cell(2, 3).style(this.getDefaultStyle()).string('Volume')
-    this.sheet.cell(2, 4).style(this.getDefaultStyle()).string('Valor')
+    this.sheet.cell(1, 3, 1, 4, true).style(this.getHeaderStyle()).string('Faturamento mar/2025')
+    this.sheet.cell(2, 3).style(this.getHeaderStyle()).string('Volume')
+    this.sheet.cell(2, 4).style(this.getHeaderStyle()).string('Valor')
 
-    this.sheet.cell(1, 5, 1, 6, true).style(this.getDefaultStyle()).string('Faturamento abr/2025')
-    this.sheet.cell(2, 5).style(this.getDefaultStyle()).string('Volume')
-    this.sheet.cell(2, 6).style(this.getDefaultStyle()).string('Valor')
+    this.sheet.cell(1, 5, 1, 6, true).style(this.getHeaderStyle()).string('Faturamento abr/2025')
+    this.sheet.cell(2, 5).style(this.getHeaderStyle()).string('Volume')
+    this.sheet.cell(2, 6).style(this.getHeaderStyle()).string('Valor')
 
-    this.sheet.cell(1, 7, 2, 7, true).style(this.getDefaultStyle()).string('Diferença')
+    this.sheet.cell(1, 7, 2, 7, true).style(this.getHeaderStyle()).string('Diferença')
   }
 
   createRows(rows: Record<string, string>[]): void {
@@ -32,12 +32,24 @@ export class StatusSheet extends Sheet {
 
     for (const row of rows) {
       this.sheet.cell(rowIndex, 1).style(this.getDefaultStyle('left')).string(row['description'])
-      this.sheet.cell(rowIndex, 2).style(this.getDefaultStyle()).string(row['status'])
-      this.sheet.cell(rowIndex, 3).style(this.getRangeStyle()).number(2314124) // TODO
-      this.sheet.cell(rowIndex, 4).style(this.getFixedStyle()).number(5412.33) // TODO
-      this.sheet.cell(rowIndex, 5).style(this.getRangeStyle()).number(4141424) // TODO
-      this.sheet.cell(rowIndex, 6).style(this.getFixedStyle()).number(6412.33) // TODO
-      this.sheet.cell(rowIndex, 7).style(this.getPercentageStyle()).formula(`-((${getExcelCellRef(rowIndex, 4)}-${getExcelCellRef(rowIndex, 6)})/(${getExcelCellRef(rowIndex, 4)}+${getExcelCellRef(rowIndex, 6)}))`)
+      this.sheet.cell(rowIndex, 2).style(row['status'] === 'SUCESSO' ? this.getSuccessStyle() : this.getErrorStyle()).string(row['status'])
+
+      this.sheet.cell(rowIndex, 3).style(this.getRangeStyle()).number(parseInt(row['previousQuantity'] ?? 0))
+      this.sheet.cell(rowIndex, 4).style(this.getFixedStyle()).number(parseFloat(row['previousValue'] ?? 0))
+      this.sheet.cell(rowIndex, 5).style(this.getRangeStyle()).number(parseInt(row['actualQuantity'] ?? 0))
+      this.sheet.cell(rowIndex, 6).style(this.getFixedStyle()).number(parseFloat(row['actualValue'] ?? 0))
+
+      const difference = parseFloat(row['actualValue'] ?? 0) - parseFloat(row['previousValue'] ?? 0);
+
+      let percentageStyle: 'positive' | 'negative' | undefined;
+      if (difference > 0) {
+        percentageStyle = 'positive';
+      } else if (difference < 0) {
+        percentageStyle = 'negative';
+      }
+
+
+      this.sheet.cell(rowIndex, 7).style(this.getPercentageStyle(percentageStyle)).formula(`-((${getExcelCellRef(rowIndex, 4)}-${getExcelCellRef(rowIndex, 6)})/(${getExcelCellRef(rowIndex, 4)}+${getExcelCellRef(rowIndex, 6)}))`)
 
       rowIndex++;
     }
@@ -49,6 +61,33 @@ export class StatusSheet extends Sheet {
       .alignment(alignment)
       .font({ size: 11 })
       .fillColor('#ffffff')
+      .build(this.workbook);
+  }
+
+  private getSuccessStyle() {
+    return new SheetStyleBuilder()
+      .fullBorder()
+      .alignment('center')
+      .font({ size: 11, color: '#006100' })
+      .fillColor('#c7f0cf')
+      .build(this.workbook);
+  }
+
+  private getErrorStyle() {
+    return new SheetStyleBuilder()
+      .fullBorder()
+      .alignment('center')
+      .font({ size: 11, color: '#9c0005' })
+      .fillColor('#ffc7cd')
+      .build(this.workbook);
+  }
+
+  private getHeaderStyle() {
+    return new SheetStyleBuilder()
+      .fullBorder()
+      .alignment('center')
+      .font({ size: 11, bold: true })
+      .fillColor('#bfbfbf')
       .build(this.workbook);
   }
 
@@ -72,13 +111,24 @@ export class StatusSheet extends Sheet {
       .build(this.workbook);
   }
 
-  private getPercentageStyle() {
+  private getPercentageStyle(color?: 'positive' | 'negative') {
+    let fontColor = '#000000';
+    let fgColor = '#ffffff';
+
+    if (color === 'positive') {
+      fontColor = '#006100';
+      fgColor = '#c7f0cf';
+    } else if (color === 'negative') {
+      fontColor = '#9c0005';
+      fgColor = '#ffc7cd';
+    }
+
     return new SheetStyleBuilder()
       .fullBorder()
       .alignment('right')
-      .font({ size: 11 })
-      .numberFormat('#.00%; -#.00%; -')
-      .fillColor('#ffffff')
+      .font({ size: 11, color: fontColor })
+      .numberFormat('0.00%; -0.00%; -')
+      .fillColor(fgColor)
       .build(this.workbook);
   }
 }

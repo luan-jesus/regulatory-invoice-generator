@@ -20,10 +20,10 @@ export class InvoiceWorkbook {
     this.metadataService = metadataService;
   }
 
-  buildStatusSheet() {
+  async buildStatusSheet() {
     const statusSheet = new StatusSheet(this.workbook, 'Status');
     statusSheet.createHeader();
-    statusSheet.createRows(Utils.getEnvironmentsStatus(this.environments));
+    statusSheet.createRows(await Utils.getEnvironmentsStatus(this.environments, this.referenceDate));
   }
 
   async buildAllEnvironmentSheets() {
