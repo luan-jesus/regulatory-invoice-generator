@@ -1,6 +1,5 @@
-import type { ConnectionProperties, QueryResult } from "../types";
-
-import { DbClient } from "./db-client";
+import type { ConnectionProperties, QueryResult } from "../../types";
+import { DbClient } from "../pg/db-client";
 
 export class MetadataService {
   private dbClient: DbClient;

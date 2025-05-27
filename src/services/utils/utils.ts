@@ -1,6 +1,6 @@
-import type { EnvironmentConfig, ConnectionProperties, ReferenceDate } from '../types';
-import { RangeResult } from './env-invoice-sheet';
-import EnvironmentMovementService from './environment-movement-service';
+import type { EnvironmentConfig, ConnectionProperties, ReferenceDate } from '../../types';
+import EnvironmentMovementService from '../environment/environment-movement-service';
+import { RangeResult } from '../excel4node/env-invoice-sheet';
 import { MetadataService } from './metadata-service';
 
 export class Utils {

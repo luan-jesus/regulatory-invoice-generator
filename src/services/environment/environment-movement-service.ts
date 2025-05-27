@@ -1,6 +1,6 @@
-import { EnvironmentConfig, QueryResult } from "../types";
-import { DbClient } from "./db-client";
-import { Utils } from "./utils";
+import { EnvironmentConfig, QueryResult } from "../../types";
+import { DbClient } from "../pg/db-client";
+import { Utils } from "../utils/utils";
 
 export default class EnvironmentMovementService {
   private dbClient: DbClient;

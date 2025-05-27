@@ -1,5 +1,5 @@
-import { InvoiceWorkbook } from './services/invoice-workbook';
-import { MetadataService } from './services/metadata-service';
+import { InvoiceWorkbook } from './services/excel4node/invoice-workbook';
+import { MetadataService } from './services/utils/metadata-service';
 import type { EnvironmentConfig } from './types';
 
 const OUTPUT_DIR = "./files/";

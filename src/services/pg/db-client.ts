@@ -1,5 +1,5 @@
 import { Client } from "pg";
-import type { ConnectionProperties, QueryResult } from "../types";
+import type { ConnectionProperties, QueryResult } from "../../types";
 
 export class DbClient {
   private client: Client;

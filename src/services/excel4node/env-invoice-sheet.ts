@@ -1,5 +1,5 @@
+import SheetStyleBuilder from "../utils/sheet-style-builder";
 import { Sheet } from "./sheet";
-import SheetStyleBuilder from "./sheet-style-builder";
 
 export type RangeResult = {
   rangeQuantity: number;

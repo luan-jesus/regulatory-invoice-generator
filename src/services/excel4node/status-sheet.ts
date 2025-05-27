@@ -1,6 +1,6 @@
+import SheetStyleBuilder from "../utils/sheet-style-builder";
 import { Sheet } from "./sheet";
 import { getExcelCellRef } from "excel4node";
-import SheetStyleBuilder from "./sheet-style-builder";
 
 export class StatusSheet extends Sheet {
 
