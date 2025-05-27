@@ -1,48 +1,50 @@
 import { Workbook } from "excel4node";
 import type { EnvironmentConfig, ReferenceDate } from '../../types';
-import { SQL_MONTHLY_CLASSIFIERS } from "../../sql";
 import { StatusSheet } from "./status-sheet";
 import { EnvInvoiceSheet } from "./env-invoice-sheet";
 import { MetadataService } from "../utils/metadata-service";
-import { Utils } from "../utils/utils";
-import { DbClient } from "../pg/db-client";
+import EnvironmentMovementService from "../environment/environment-movement-service";
+import EnvironmentService from "../environment/environment-service";
 
 export class InvoiceWorkbook {
   private workbook: Workbook;
-  private environments: EnvironmentConfig[];
   private referenceDate: ReferenceDate;
   private metadataService: MetadataService;
+  private environmentMovementService: Map<string, EnvironmentMovementService>;
+  private environmentService: EnvironmentService;
 
-  constructor(environments: EnvironmentConfig[], referenceDate: ReferenceDate, metadataService: MetadataService) {
+  constructor(referenceDate: ReferenceDate, metadataService: MetadataService, environmentMovementService: Map<string, EnvironmentMovementService>, environmentService: EnvironmentService) {
     this.workbook = new Workbook();
-    this.environments = environments;
+    this.environmentMovementService = environmentMovementService;
     this.referenceDate = referenceDate;
     this.metadataService = metadataService;
+    this.environmentService = environmentService;
   }
 
   async buildStatusSheet() {
     const statusSheet = new StatusSheet(this.workbook, 'Status');
     statusSheet.createHeader();
-    statusSheet.createRows(await Utils.getEnvironmentsStatus(this.environments, this.referenceDate, this.metadataService));
+    statusSheet.createRows(await this.environmentService.getEnvironmentsStatus(this.referenceDate));
   }
 
   async buildAllEnvironmentSheets() {
-    for (let i = 0; i < this.environments.length; i++) {
-      console.log(`${i + 1} / ${this.environments?.length} - fetching data from: ${this.environments[i].name}`)
-      await this.buildEnvironmentSheet(this.environments[i].description, this.environments[i])
+    let i = 0;
+    for (const movementService of this.environmentMovementService.values()) {
+      console.log(`(${++i} / ${this.environmentMovementService.size}) - Fetching data for environment: ${movementService.environment.name}`);
+      await this.buildEnvironmentSheet(movementService);
     }
   }
 
-  async buildEnvironmentSheet(sheetName: string, environment: EnvironmentConfig) {
-    const envInvoiceSheet = new EnvInvoiceSheet(this.workbook, sheetName);
+  async buildEnvironmentSheet(environmentMovementService: EnvironmentMovementService) {
+    const envInvoiceSheet = new EnvInvoiceSheet(this.workbook, environmentMovementService.environment.description);
     envInvoiceSheet.createHeader();
-
-    const monthlyMovements = await this.findMonthlyMovements(environment)
+    
+    const monthlyMovements = await environmentMovementService.findMonthlyMovements(this.referenceDate.month, this.referenceDate.year);
     
     if (monthlyMovements)
       envInvoiceSheet.createRows(monthlyMovements);
 
-    const ranges = await this.metadataService.fetchEnvironmentRange(environment.id);
+    const ranges = await this.metadataService.fetchEnvironmentRange(environmentMovementService.environment.id);
 
     if (ranges && ranges.size) {
       envInvoiceSheet.buildRangeTable(ranges.content);
@@ -52,25 +54,5 @@ export class InvoiceWorkbook {
 
   write(filePath: string) {
     this.workbook.write(filePath);
-  }
-
-  private async findMonthlyMovements(environment: EnvironmentConfig): Promise<Record<string, string>[] | undefined> {
-    const query = SQL_MONTHLY_CLASSIFIERS
-      .replace('{month}', this.referenceDate.month)
-      .replace('{year}', this.referenceDate.year);
-
-    const dbClient = new DbClient(Utils.getDatabasePropertiesByService(environment, 'movimentacao'));
-    await dbClient.open();
-    const response = await dbClient.query(query)
-    await dbClient.close();
-
-    if (!response || !response.size) {
-      console.warn(`no movements found`)
-      return
-    }
-
-    console.log(`found ${response.size} classifiers`)
-
-    return response.content;
   }
 }

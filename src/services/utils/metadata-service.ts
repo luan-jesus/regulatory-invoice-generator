@@ -18,10 +18,6 @@ export class MetadataService {
   }
 
   async fetchEnvironmentRange(idEnvironment: number): Promise<QueryResult> {
-    if (!this.dbClient.isOpen) {
-      await this.dbClient.open();
-    }
-
     const query = `
       select 
         tr.id,
@@ -40,10 +36,6 @@ export class MetadataService {
   }
 
   async findAllEnvironments(): Promise<QueryResult> {
-    if (!this.dbClient.isOpen) {
-      await this.dbClient.open();
-    }
-
     const query = `
       SELECT
         id,
@@ -55,6 +47,12 @@ export class MetadataService {
     `;
 
     return await this.dbClient.query(query);
+  }
+
+  async open() {
+    if (!this.dbClient.isOpen) {
+      await this.dbClient.open();
+    }
   }
 
   async close() {
