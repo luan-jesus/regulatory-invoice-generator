@@ -1,5 +1,6 @@
 import { Sheet } from "./sheet";
 import { getExcelCellRef } from "excel4node";
+import SheetStyleBuilder from "./sheet-style-builder";
 
 export class StatusSheet extends Sheet {
 
@@ -43,142 +44,41 @@ export class StatusSheet extends Sheet {
   }
 
   private getDefaultStyle(alignment: 'left' | 'center' | 'right' = 'center') {
-    return this.workbook.createStyle({
-      font: {
-        size: 11,
-      },
-      alignment: {
-        horizontal: alignment,
-        vertical: 'center',
-      },
-      fill: {
-        type: 'pattern',
-        patternType: 'solid',
-        fgColor: '#ffffff',
-      },
-      border: {
-        left: {
-          style: 'thin',
-          color: '#000000'
-        },
-        right: {
-          style: 'thin',
-          color: '#000000'
-        },
-        top: {
-          style: 'thin',
-          color: '#000000'
-        },
-        bottom: {
-          style: 'thin',
-          color: '#000000'
-        }
-      }
-    })
+    return new SheetStyleBuilder()
+      .fullBorder()
+      .alignment(alignment)
+      .font({ size: 11 })
+      .fillColor('#ffffff')
+      .build(this.workbook);
   }
 
   private getRangeStyle() {
-    return this.workbook.createStyle({
-      font: {
-        size: 11,
-      },
-      numberFormat: '#,##0; (#,##0); -',
-      alignment: {
-        horizontal: 'right'
-      },
-      fill: {
-        type: 'pattern',
-        patternType: 'solid',
-        fgColor: '#ffffff'
-      },
-      border: {
-        left: {
-          style: 'thin',
-          color: '#000000'
-        },
-        right: {
-          style: 'thin',
-          color: '#000000'
-        },
-        top: {
-          style: 'thin',
-          color: '#000000'
-        },
-        bottom: {
-          style: 'thin',
-          color: '#000000'
-        }
-      }
-    })
+    return new SheetStyleBuilder()
+      .fullBorder()
+      .alignment('right')
+      .font({ size: 11 })
+      .numberFormat('#,##0; - #,##0; -')
+      .fillColor('#ffffff')
+      .build(this.workbook);
   }
 
   private getFixedStyle() {
-    return this.workbook.createStyle({
-      font: {
-        size: 11,
-      },
-      numberFormat: 'R$ #,##0.00; (R$ #,##0.00); -',
-      alignment: {
-        horizontal: 'right'
-      },
-      fill: {
-        type: 'pattern',
-        patternType: 'solid',
-        fgColor: "#ffffff"
-      },
-      border: {
-        left: {
-          style: 'thin',
-          color: '#000000'
-        },
-        right: {
-          style: 'thin',
-          color: '#000000'
-        },
-        top: {
-          style: 'thin',
-          color: '#000000'
-        },
-        bottom: {
-          style: 'thin',
-          color: '#000000'
-        }
-      }
-    })
+    return new SheetStyleBuilder()
+      .fullBorder()
+      .alignment('right')
+      .font({ size: 11 })
+      .numberFormat('R$ #,##0.00; - R$ #,##0.00; -')
+      .fillColor('#ffffff')
+      .build(this.workbook);
   }
 
   private getPercentageStyle() {
-    return this.workbook.createStyle({
-      font: {
-        size: 11,
-      },
-      numberFormat: '#.00%; -#.00%; -',
-      alignment: {
-        horizontal: 'right'
-      },
-      fill: {
-        type: 'pattern',
-        patternType: 'solid',
-        fgColor: "#ffffff"
-      },
-      border: {
-        left: {
-          style: 'thin',
-          color: '#000000'
-        },
-        right: {
-          style: 'thin',
-          color: '#000000'
-        },
-        top: {
-          style: 'thin',
-          color: '#000000'
-        },
-        bottom: {
-          style: 'thin',
-          color: '#000000'
-        }
-      }
-    })
+    return new SheetStyleBuilder()
+      .fullBorder()
+      .alignment('right')
+      .font({ size: 11 })
+      .numberFormat('#.00%; -#.00%; -')
+      .fillColor('#ffffff')
+      .build(this.workbook);
   }
 }

@@ -1,4 +1,5 @@
 import { Sheet } from "./sheet";
+import SheetStyleBuilder from "./sheet-style-builder";
 
 type RangeResult = {
   rangeQuantity: number;
@@ -186,69 +187,33 @@ export class EnvInvoiceSheet extends Sheet {
   }
 
   private getHeaderStyle() {
-    return this.workbook.createStyle({
-      font: {
-        bold: true,
-        color: '#ffffff',
-        size: 11
-      },
-      fill: {
-        type: 'pattern',
-        patternType: 'solid',
-        fgColor: '#000000'
-      },
-      alignment: {
-        horizontal: 'center'
-      }
-    })
+    return new SheetStyleBuilder()
+      .fullBorder()
+      .alignment('center')
+      .font({ size: 11, bold: true, color: '#ffffff' })
+      .fillColor('#000000')
+      .build(this.workbook);
   }
 
   private getResumeHeaderStyle(variant?: 'default' | 'number' | 'currency') {
     let alignment: 'center' | 'right' = 'center';
-    let numberFormat = 'R$ #,##0.00; (R$ #,##0.00); -';
+    let numberFormat = 'R$ #,##0.00; - R$ #,##0.00; -';
 
     if (variant === 'number') {
-      numberFormat = '#,##0; (#,##0); -';
+      numberFormat = '#,##0; - #,##0; -';
       alignment = 'right';
     } else if (variant === 'currency') {
-      numberFormat = 'R$ #,##0.00; (R$ #,##0.00); -';
+      numberFormat = 'R$ #,##0.00;- R$ #,##0.00; -';
       alignment = 'right';
     }
 
-    return this.workbook.createStyle({
-      font: {
-        bold: true,
-        color: '#000000',
-        size: 11
-      },
-      fill: {
-        type: 'pattern',
-        patternType: 'solid',
-        fgColor: '#bfbfbf'
-      },
-      alignment: {
-        horizontal: alignment
-      },
-      border: {
-        left: {
-          style: 'thin',
-          color: '#000000'
-        },
-        right: {
-          style: 'thin',
-          color: '#000000'
-        },
-        top: {
-          style: 'thin',
-          color: '#000000'
-        },
-        bottom: {
-          style: 'thin',
-          color: '#000000'
-        }
-      },
-      numberFormat: numberFormat
-    })
+    return new SheetStyleBuilder()
+      .fullBorder()
+      .alignment(alignment)
+      .numberFormat(numberFormat)
+      .font({ size: 11, bold: true })
+      .fillColor('#bfbfbf')
+      .build(this.workbook);
   }
 
   private getRangeStyle(bgWhite?: boolean) {
@@ -257,38 +222,13 @@ export class EnvInvoiceSheet extends Sheet {
     if (bgWhite)
       fgColor = '#ffffff';
 
-    return this.workbook.createStyle({
-      font: {
-        size: 11,
-      },
-      numberFormat: '#,##0; (#,##0); -',
-      alignment: {
-        horizontal: 'right'
-      },
-      fill: {
-        type: 'pattern',
-        patternType: 'solid',
-        fgColor: fgColor
-      },
-      border: {
-        left: {
-          style: 'thin',
-          color: '#000000'
-        },
-        right: {
-          style: 'thin',
-          color: '#000000'
-        },
-        top: {
-          style: 'thin',
-          color: '#000000'
-        },
-        bottom: {
-          style: 'thin',
-          color: '#000000'
-        }
-      }
-    })
+    return new SheetStyleBuilder()
+      .fullBorder()
+      .alignment('right')
+      .numberFormat('#,##0;- #,##0; -')
+      .font({ size: 11 })
+      .fillColor(fgColor)
+      .build(this.workbook);
   }
 
   private getFixedStyle(bgWhite?: boolean) {
@@ -297,38 +237,13 @@ export class EnvInvoiceSheet extends Sheet {
     if (bgWhite)
       fgColor = '#ffffff';
 
-    return this.workbook.createStyle({
-      font: {
-        size: 11,
-      },
-      numberFormat: 'R$ #,##0.00; (R$ #,##0.00); -',
-      alignment: {
-        horizontal: 'right'
-      },
-      fill: {
-        type: 'pattern',
-        patternType: 'solid',
-        fgColor: fgColor
-      },
-      border: {
-        left: {
-          style: 'thin',
-          color: '#000000'
-        },
-        right: {
-          style: 'thin',
-          color: '#000000'
-        },
-        top: {
-          style: 'thin',
-          color: '#000000'
-        },
-        bottom: {
-          style: 'thin',
-          color: '#000000'
-        }
-      }
-    })
+    return new SheetStyleBuilder()
+      .fullBorder()
+      .alignment('right')
+      .numberFormat('R$ #,##0.00;- R$ #,##0.00; -')
+      .font({ size: 11 })
+      .fillColor(fgColor)
+      .build(this.workbook);
   }
 
   private getDecimalStyle(bgWhite?: boolean) {
@@ -337,77 +252,27 @@ export class EnvInvoiceSheet extends Sheet {
     if (bgWhite)
       fgColor = '#ffffff';
 
-    return this.workbook.createStyle({
-      font: {
-        size: 11,
-      },
-      numberFormat: 'R$ #,##0.00000; (R$ #,##0.00000); -',
-      alignment: {
-        horizontal: 'right'
-      },
-      fill: {
-        type: 'pattern',
-        patternType: 'solid',
-        fgColor: fgColor
-      },
-      border: {
-        left: {
-          style: 'thin',
-          color: '#000000'
-        },
-        right: {
-          style: 'thin',
-          color: '#000000'
-        },
-        top: {
-          style: 'thin',
-          color: '#000000'
-        },
-        bottom: {
-          style: 'thin',
-          color: '#000000'
-        }
-      }
-    })
+    return new SheetStyleBuilder()
+      .fullBorder()
+      .alignment('right')
+      .numberFormat('R$ #,##0.00000; - R$ #,##0.00000; -')
+      .font({ size: 11 })
+      .fillColor(fgColor)
+      .build(this.workbook);
   }
 
-  private getRowStyle(alignment?: 'left' | 'center' | 'right', bgWhite?: boolean) {
+  private getRowStyle(alignment: 'left' | 'center' | 'right' = 'center', bgWhite?: boolean) {
     let fgColor = this.rowNumber % 2 === 0 ? '#d9d9d9' : '#ffffff';
 
     if (bgWhite)
       fgColor = '#ffffff';
 
-    return this.workbook.createStyle({
-      font: {
-        size: 11,
-      },
-      alignment: {
-        horizontal: alignment ?? 'center',
-      },
-      fill: {
-        type: 'pattern',
-        patternType: 'solid',
-        fgColor: fgColor
-      },
-      border: {
-        left: {
-          style: 'thin',
-          color: '#000000'
-        },
-        right: {
-          style: 'thin',
-          color: '#000000'
-        },
-        top: {
-          style: 'thin',
-          color: '#000000'
-        },
-        bottom: {
-          style: 'thin',
-          color: '#000000'
-        }
-      }
-    })
+    return new SheetStyleBuilder()
+      .fullBorder()
+      .alignment(alignment)
+      .font({ size: 11 })
+      .fillColor(fgColor)
+      .build(this.workbook);
   }
 
   private getBillingType(billingType: string): string {
