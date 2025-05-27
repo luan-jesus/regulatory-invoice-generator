@@ -23,7 +23,7 @@ export class InvoiceWorkbook {
   async buildStatusSheet() {
     const statusSheet = new StatusSheet(this.workbook, 'Status');
     statusSheet.createHeader();
-    statusSheet.createRows(await Utils.getEnvironmentsStatus(this.environments, this.referenceDate));
+    statusSheet.createRows(await Utils.getEnvironmentsStatus(this.environments, this.referenceDate, this.metadataService));
   }
 
   async buildAllEnvironmentSheets() {

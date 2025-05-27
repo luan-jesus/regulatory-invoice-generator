@@ -1,7 +1,7 @@
 import { Sheet } from "./sheet";
 import SheetStyleBuilder from "./sheet-style-builder";
 
-type RangeResult = {
+export type RangeResult = {
   rangeQuantity: number;
   unitValue: string;
   rangeValue: number;
