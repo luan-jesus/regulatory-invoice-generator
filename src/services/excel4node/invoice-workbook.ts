@@ -1,5 +1,5 @@
 import { Workbook } from "excel4node";
-import type { EnvironmentConfig, ReferenceDate } from '../../types';
+import type { ReferenceDate } from '../../types';
 import { StatusSheet } from "./status-sheet";
 import { EnvInvoiceSheet } from "./env-invoice-sheet";
 import { MetadataService } from "../utils/metadata-service";

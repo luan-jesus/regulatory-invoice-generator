@@ -39,7 +39,7 @@ export default class EnvironmentMovementService {
         valor,
         quantidade
       from movimentacao.t_classificador_mensal
-      where ano = '${year}' and mes = '${month}'
+      where ano = '${year}' and mes = '${month}' and ativo_classificador = true
       order by id_classificador
     `
 
@@ -62,7 +62,7 @@ export default class EnvironmentMovementService {
 
     const query = `
       select sum(quantidade) quantidade, sum(valor) valor from movimentacao.t_classificador_mensal tcm 
-      where mes = '${month}' and ano = '${year}'
+      where mes = '${month}' and ano = '${year}' and ativo_classificador = true
     `;
 
     return await this.dbClient.query(query);
