@@ -68,7 +68,7 @@ export default class EnvironmentService {
       const rangeEnd = parseInt(range['range_end'] ?? 0);
       const unitValue = parseFloat(range['unit_value']);
 
-      if ((recordsCount - (rangeEnd - rangeStart)) > 0) {
+      if (rangeEnd !== 0 && (recordsCount - (rangeEnd - rangeStart)) > 0) {
         rangeValues.set(parseInt(range['sequence']), {
           rangeQuantity: (rangeEnd - rangeStart),
           unitValue: range['unit_value'],
