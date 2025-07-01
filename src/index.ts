@@ -5,7 +5,7 @@ import { MetadataService } from './services/utils/metadata-service';
 import type { EnvironmentConfig } from './types';
 
 const YEAR = '2025';
-const MONTH = '05';
+const MONTH = '06';
 const filePath = `./files/${YEAR}-${MONTH}-FATURAMENTO-${new Date().toISOString().split('T')[0]}.xlsx`;
 
 class RegulatoryInvoiceGenerator {
@@ -51,7 +51,7 @@ class RegulatoryInvoiceGenerator {
     }
   }
 
-  // ~1close all services connections
+  // close all services connections
   static async destroyAll() {
     await this.metadataService.close();
 
